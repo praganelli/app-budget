@@ -3699,9 +3699,21 @@ function initFirebaseSync() {
     // Si déjà connecté, onUserSignedIn sera appelé automatiquement
     updateSyncStatus('syncing', 'Vérification…');
   } else {
-    // Pas de config → mode local sans auth
-    document.getElementById('authScreen').classList.add('hidden');
+    // Pas de config Firebase → on laisse l'écran d'auth visible
+    // afin que l'utilisateur configure Firebase puis crée son compte / se connecte.
+    const authScreen = document.getElementById('authScreen');
+    if (authScreen) authScreen.classList.remove('hidden');
     updateSyncStatus('offline', 'Non configuré');
+    // Première visite sans aucune donnée locale : déclencher l'assistant d'accueil
+    // par-dessus l'écran d'auth pour expliquer les étapes (résumé uniquement).
+    try {
+      const alreadyWelcomed = localStorage.getItem('budget_welcomed') === '1';
+      const hasData = (data.revenus.length + data.fixes.length + data.variables.length + data.epargne.length) > 0
+                   || getAllMonthKeys().length > 0;
+      if (!alreadyWelcomed && !hasData) {
+        setTimeout(showWelcome, 600);
+      }
+    } catch(_) {}
   }
 }
 
